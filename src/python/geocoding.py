@@ -1,5 +1,5 @@
 import requests
-# import geocoder
+import geocoder
 # consider using this library instead
 # https://geocoder.readthedocs.io/
 # https://github.com/DenisCarriere/geocoder
