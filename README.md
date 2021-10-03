@@ -11,3 +11,5 @@ PyCharm has built-in GitHub intergration:
 [PyCharm GitHub Guide](https://www.jetbrains.com/help/pycharm/github.html)
 
 Go to `Preferences > Version Control > GitHub >` and add your GitHub account
+
+Open project from VCS
