@@ -18,13 +18,13 @@ def saveTLE() -> {dict}:
         f = open(FILE_DIR, 'w')
     except FileNotFoundError:
         os.mkdir(FOLDER_PATH)
-    else:
-        f.write(str(currTime) + "\n")
-        for key in data.keys():
-            line = data[key]
-            for value in line.values():
-                f.write(str(value) + "\n")
-        f.close()
+        f = open(FILE_DIR, 'w')
+    f.write(str(currTime) + "\n")
+    for key in data.keys():
+        line = data[key]
+        for value in line.values():
+            f.write(str(value) + "\n")
+    f.close()
 
     return data
 
