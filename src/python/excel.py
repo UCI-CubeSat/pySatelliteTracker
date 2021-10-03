@@ -1,10 +1,9 @@
-from src.python import satnogs
+from src.python import satnogs, filepath
 import openpyxl
 from datetime import datetime
 
-
 TABS = {0: "allSatellite", 1: "filteredSatellite", 2: "sortedSatellite", 3: "TLE"}
-FILE_DIR = '/Users/j0z07b8/CubeSAT/satnogs' + str(datetime.now().date()) + '.xlsx'
+FILE_DIR = filepath.getRoot() + "/CubeSAT/satnogs" + str(datetime.now().date()) + ".xlsx"
 DATA_0 = satnogs.getSatellites()
 DATA_1 = satnogs.satelliteFilter(DATA_0)
 DATA_2 = satnogs.sortMostRecent(DATA_1)
@@ -59,6 +58,5 @@ def setWorkbook():
     setTab(wb)
     wb.save(FILE_DIR)
     wb.close()
-
 
 # setWorkbook()

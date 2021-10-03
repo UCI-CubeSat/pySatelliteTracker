@@ -1,5 +1,5 @@
 from src.python import excel
 from src.python import tle
 
-# excel.setWorkbook()
+excel.setWorkbook()
 tle.loadTLE()

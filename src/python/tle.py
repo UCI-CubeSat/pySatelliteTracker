@@ -1,8 +1,8 @@
 from datetime import datetime
-
+import filepath
 from src.python import satnogs
 
-FILE_DIR = '/Users/j0z07b8/CubeSAT/tle.txt'
+FILE_DIR = filepath.getRoot() + "/CubeSAT/tle.txt"
 
 
 def getTLE():
