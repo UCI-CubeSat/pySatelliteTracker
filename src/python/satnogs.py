@@ -23,12 +23,12 @@ def getSatellites() -> [dict]:
             for s in requests.get(TRANSMITTER_URL).json() if s["alive"]]
 
 
-def getTLE() -> [dict]:
+def getTLE() -> {dict}:
     """
     :return: A list of all available Satellite's TLE from Satnogs
     """
     # get TLE response from api, TLE is used to calculate flight path
-    return [tle for tle in requests.get(TLE_URL).json()]
+    return {tle["tle0"]: tle for tle in requests.get(TLE_URL).json()}
 
 
 def satelliteFilter(satelliteList: [dict], mode: str = "AFSK", baud: int = 1200) -> [dict]:
