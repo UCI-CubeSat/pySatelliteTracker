@@ -1,0 +1,8 @@
+skyfield
+numpy
+matplotlib
+openpyxl
+datetime
+requests
+urllib
+pytz
