@@ -29,7 +29,7 @@ def saveTLE() -> {dict}:
     return data
 
 
-def loadTLE() -> [dict]:
+def loadTLE() -> {dict}:
     try:
         f = open(FILE_DIR, 'r')
     except FileNotFoundError:
@@ -48,15 +48,17 @@ def loadTLE() -> [dict]:
             return data
         else:
             print("LOGGING: read existing tle file")
-            data = []
-            for line in range(1, len(lines), 7):
-                keys = ['tle0', 'tle1', 'tle2', 'tle_source', 'url', 'norad_cat_id']
+            keySet = ['tle0', 'tle1', 'tle2', 'tle_source', 'sat_id', 'norad_cat_id', 'updated']
+            data = dict()
+            for line in range(1, len(lines), len(keySet)):
                 tle = dict()
-                for k in range(6):
-                    if k == 4:
-                        tle[keys[k]] = "https://db.satnogs.org/satellite/" + lines[line + k].strip()
+                name = lines[line].strip()
+                for index in range(0, len(keySet)):
+                    content = lines[line + index].strip()
+                    if index == 4:
+                        tle[keySet[index]] = "https://db.satnogs.org/satellite/" + content
                     else:
-                        tle[keys[k]] = lines[line + k].strip()
-                data.append(tle)
+                        tle[keySet[index]] = content
+                data[name] = tle
             return data
-    return []
+    return dict()
