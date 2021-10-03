@@ -1,23 +1,30 @@
+import os
 from datetime import datetime
 import filepath
 from src.python import satnogs
 
-FILE_DIR = filepath.getRoot() + "/CubeSAT/tle.txt"
+FOLDER_PATH = filepath.getRoot() + "/CubeSAT"
+FILE_DIR = FOLDER_PATH + "/tle.txt"
 
 
-def getTLE():
-    return satnogs.tleFilter(satnogs.sortMostRecent(satnogs.satelliteFilter(satnogs.getSatellites())))
+def getTLE() -> {dict}:
+    return satnogs.getTLE()
 
 
-def saveTLE() -> [dict]:
+def saveTLE() -> {dict}:
     data = getTLE()
     currTime = datetime.now()
-    f = open(FILE_DIR, 'w')
-    f.write(str(currTime) + "\n")
-    for line in data:
-        for v in line.values():
-            f.write(str(v) + "\n")
-    f.close()
+    try:
+        f = open(FILE_DIR, 'w')
+    except FileNotFoundError:
+        os.mkdir(FOLDER_PATH)
+    else:
+        f.write(str(currTime) + "\n")
+        for key in data.keys():
+            line = data[key]
+            for value in line.values():
+                f.write(str(value) + "\n")
+        f.close()
 
     return data
 
