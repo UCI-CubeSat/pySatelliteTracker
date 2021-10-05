@@ -22,8 +22,7 @@ def getLatLong():
 
 @app.route('/flight_path', methods=['GET'])
 def getCalculation():
-    data = satnogs.getTLE()["ISS (ZARYA)"]
-    print(data.keys())
+    data = tle.loadTLE()["ISS (ZARYA)"]
     return flask.jsonify(calculation.getPath(data, "ISS (ZARYA)"))
 
 

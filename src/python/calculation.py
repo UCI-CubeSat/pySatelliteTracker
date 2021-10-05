@@ -40,13 +40,6 @@ def getSphericalPath(data: dict, duration: float, resolution: float) -> dict:
                           wgs84.subpoint(satellite.at(t)).longitude.degrees)
     response["identifier"] = data["tle0"]
 
-    # response["identifier"] = data["tle0"]
-    # response["origin"] = (wgs84.subpoint(satellite.at(t)).latitude.degrees,
-    #                       wgs84.subpoint(satellite.at(t)).longitude.degrees)
-    # response["latArray"] = list(path.latitude.degrees)
-    # response["longArray"] = list(path.longitude.degrees)
-    # response["elevationArray"] = list(path.elevation.au)
-
     return response
 
 
