@@ -1,3 +1,5 @@
+import collections
+
 import numpy
 from skyfield.toposlib import wgs84
 from skyfield.api import EarthSatellite, load
@@ -12,10 +14,11 @@ def selectSat(tle: dict, name: str) -> dict:
 
 
 def getPath(data: dict, mode: str = "latlong", duration: float = 10 * 3600, resolution: float = 4.0) -> dict:
-    if mode == "latlongheight":
-        return getSphericalPath(data, duration, resolution)
-    if mode == "xyz":
-        return getCartesianPath(data, duration, resolution)
+    # if mode == "latlong":
+    #     return getSphericalPath(data, duration, resolution)
+    # if mode == "xyz":
+    #     return getCartesianPath(data, duration, resolution)
+    return getSphericalPath(data, duration, resolution)
 
 
 def getSphericalPath(data: dict, duration: float, resolution: float) -> dict:
@@ -30,12 +33,19 @@ def getSphericalPath(data: dict, duration: float, resolution: float) -> dict:
     location = satellite.at(interval)
     path = wgs84.subpoint(location)
 
-    response["identifier"] = data["tle0"]
+    response["elevationArray"] = path.elevation.au.tolist()
+    response["longArray"] = path.longitude.degrees.tolist()
+    response["latArray"] = path.latitude.degrees.tolist()
     response["origin"] = (wgs84.subpoint(satellite.at(t)).latitude.degrees,
                           wgs84.subpoint(satellite.at(t)).longitude.degrees)
-    response["latArray"] = path.latitude.degrees
-    response["longArray"] = path.longitude.degrees
-    response["elevationArray"] = path.elevation.degrees
+    response["identifier"] = data["tle0"]
+
+    # response["identifier"] = data["tle0"]
+    # response["origin"] = (wgs84.subpoint(satellite.at(t)).latitude.degrees,
+    #                       wgs84.subpoint(satellite.at(t)).longitude.degrees)
+    # response["latArray"] = list(path.latitude.degrees)
+    # response["longArray"] = list(path.longitude.degrees)
+    # response["elevationArray"] = list(path.elevation.au)
 
     return response
 
