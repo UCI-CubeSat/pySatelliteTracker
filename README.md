@@ -3,6 +3,7 @@
 ### Installation
 ```
 git clone https://github.com/UCI-CubeSat/pySatelliteTracker
+cd pySatelliteTracker
 pip install -r requirements.txt
 ```
 
