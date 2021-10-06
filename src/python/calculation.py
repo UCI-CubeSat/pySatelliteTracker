@@ -14,10 +14,10 @@ def selectSat(tle: dict, name: str) -> dict:
 
 
 def getPath(data: dict, mode: str = "latlong", duration: float = 10 * 3600, resolution: float = 4.0) -> dict:
-    # if mode == "latlong":
-    #     return getSphericalPath(data, duration, resolution)
-    # if mode == "xyz":
-    #     return getCartesianPath(data, duration, resolution)
+    if mode == "latlong":
+        return getSphericalPath(data, duration, resolution)
+    if mode == "xyz":
+        return getCartesianPath(data, duration, resolution)
     return getSphericalPath(data, duration, resolution)
 
 
@@ -33,12 +33,12 @@ def getSphericalPath(data: dict, duration: float, resolution: float) -> dict:
     location = satellite.at(interval)
     path = wgs84.subpoint(location)
 
-    response["elevationArray"] = path.elevation.au.tolist()
-    response["longArray"] = path.longitude.degrees.tolist()
-    response["latArray"] = path.latitude.degrees.tolist()
+    response["identifier"] = data["tle0"]
     response["origin"] = (wgs84.subpoint(satellite.at(t)).latitude.degrees,
                           wgs84.subpoint(satellite.at(t)).longitude.degrees)
-    response["identifier"] = data["tle0"]
+    response["latArray"] = path.latitude.degrees
+    response["longArray"] = path.longitude.degrees
+    response["elevationArray"] = path.elevation.au
 
     return response
 
@@ -66,6 +66,14 @@ def getCartesianPath(data, duration, resolution):
     response["d"] = d  # euclidean distance
 
     return response
+
+
+def getSerialized(data: dict):
+    for k in data.keys():
+        if str(type(data[k])) == "<class 'numpy.ndarray'>":
+            data[k] = data[k].tolist()
+
+    return data
 
 
 def findHorizonTime(self, duration, receiverLocation: wgs84.latlon) -> list:
@@ -105,5 +113,4 @@ def findHorizonTime(self, duration, receiverLocation: wgs84.latlon) -> list:
                         numpy.arange(t0_sec, t1_sec, 60)),
                  datetime_peak))
 
-    # return sorted(intervals, key=lambda x: -len(x[0]))
     return intervals
