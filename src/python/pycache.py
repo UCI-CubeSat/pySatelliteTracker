@@ -1,7 +1,10 @@
+import subprocess
 from pymemcache.client.base import Client
 
-# brew services start memcached
+subprocess.run(["brew", "services", "start", "memcached"])
 client = Client('localhost')
-client.set('key', 'value')
-result = client.get('key')
+client.timeout = 1
+client.connect_timeout = 5
+client.set('some_key', 'some_value')
+result = client.get('some_key')
 print(result)
