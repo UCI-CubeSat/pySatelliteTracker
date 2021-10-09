@@ -39,6 +39,7 @@ def getSphericalPath(data: dict, duration: float, resolution: float) -> dict:
     response["latArray"] = path.latitude.degrees
     response["longArray"] = path.longitude.degrees
     response["elevationArray"] = path.elevation.au
+    response["interval"] = interval
 
     return response
 
@@ -60,10 +61,12 @@ def getCartesianPath(data, duration, resolution):
             [location.position.km[0][i], location.position.km[1][i], location.position.km[2][i]])
                                            - numpy.array([0, 0, 0]))))
 
+    response["identifier"] = data["tle0"]
     response["x"] = location.position.km[0]
     response["y"] = location.position.km[1]
     response["z"] = location.position.km[2]
     response["d"] = d  # euclidean distance
+    response["interval"] = interval
 
     return response
 
