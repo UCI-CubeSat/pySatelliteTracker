@@ -23,7 +23,7 @@ def getLatLong():
 @app.route('/flight_path', methods=['GET'])
 def getCalculation():
     data = tle.loadTLE()["ISS (ZARYA)"]
-    return flask.jsonify(calculation.getSerialized(calculation.getPath(data, "xyz")))
+    return flask.jsonify(calculation.getSerialized(calculation.getPath(data, "latlong")))
 
 
 if __name__ == '__main__':
