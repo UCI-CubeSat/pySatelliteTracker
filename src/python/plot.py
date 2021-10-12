@@ -6,10 +6,12 @@ from matplotlib import pyplot, animation
 from matplotlib.animation import FuncAnimation
 from skyfield.toposlib import wgs84
 
+matplotlib.use("TkAgg")
+
 IMAGE_URL = "https://upload.wikimedia.org/wikipedia/commons/8/83/Equirectangular_projection_SW.jpg"
 IRVINE = wgs84.latlon(33.643831, -117.841132, elevation_m=17)
 DURATION = 2.0 * 3600
-RESOLUTION = 4.0
+RESOLUTION = 1
 
 
 def getColor():
@@ -66,23 +68,6 @@ def plotPath() -> FuncAnimation:
                                    init_func=init, interval=1000)
 
 
-def testSingle():
-    data = getAllSat()
-    fig, ax = pyplot.subplots(figsize=(15, 7.5))
-    img = pyplot.imread(urllib.request.urlopen(IMAGE_URL), format='jpg')
-    ax.set_xlim([-180, 180])
-    ax.set_ylim([-90, 90])
-    ax.imshow(img, origin='upper', extent=[-180, 180, -90, 90], alpha=0.75)
-    ax.annotate(f'. {"Irvine, CA"}', (-117.841132, 33.643831), color='black')
-    ax.set(xlabel='longitude', ylabel='latitude', title=data[1]["identifier"])
-    long = data[0]["longArray"]
-    lat = data[0]["latArray"]
-    currPath = ax.plot(long, lat, 'black', label='ground track', linewidth=2)
-    ax.legend(loc='lower right')
+if __name__ == "__main__":
+    a = plotPath()
     pyplot.show()
-
-
-# testSingle()
-matplotlib.use("TkAgg")
-a = plotPath()
-pyplot.show()
