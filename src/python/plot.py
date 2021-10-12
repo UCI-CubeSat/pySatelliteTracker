@@ -1,5 +1,6 @@
 import random
 import urllib
+import matplotlib
 from src.python import tle, calculation
 from matplotlib import pyplot, animation
 from matplotlib.animation import FuncAnimation
@@ -81,4 +82,7 @@ def testSingle():
     pyplot.show()
 
 
-testSingle()
+# testSingle()
+matplotlib.use("TkAgg")
+a = plotPath()
+pyplot.show()
