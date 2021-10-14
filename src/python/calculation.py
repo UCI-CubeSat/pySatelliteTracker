@@ -81,7 +81,7 @@ def getSerializedPath(data: dict):
 
 def getSerializedHorizon(data: list):
     for index in range(0, len(data)):
-        data[index] = data[index]
+        data[index] = str(data[index])
 
     return data
 
@@ -98,10 +98,15 @@ def findHorizonTime(data, duration, receiverLocation: wgs84.latlon) -> list:
     t_utc, events = satellite.find_events(receiverLocation, start, end, altitude_degrees=degree)
 
     # FOR DEBUG
+    # SEE HOW IT NORMALLY ALWAYS HAVE [riseabove, culminate, setbelow]
     print(start.utc_strftime('%Y %b %d %H:%M:%S'), "-", end.utc_strftime('%Y %b %d %H:%M:%S'))
     for ti, event in zip(t_utc, events):
         name = (f'rise above {degree}°', 'culminate', f'set below {degree}°')[event]
-        print(ti.utc_strftime('%Y %b %d %H:%M:%S'), name)
+        print(f'{ti.utc_strftime("%Y %b %d %H:%M:%S")} {name}', end="")
+        if "set below" in name:
+            print("")
+        else:
+            print(", ", end="")
     # END DEBUG
 
     intervals = []
