@@ -71,7 +71,7 @@ def getCartesianPath(data, duration, resolution):
     return response
 
 
-def getSerialized(data: dict):
+def getSerializedPath(data: dict):
     for k in data.keys():
         if str(type(data[k])) == "<class 'numpy.ndarray'>":
             data[k] = data[k].tolist()
@@ -79,27 +79,40 @@ def getSerialized(data: dict):
     return data
 
 
-def findHorizonTime(self, duration, receiverLocation: wgs84.latlon) -> list:
+def getSerializedHorizon(data: list):
+    for index in range(0, len(data)):
+        data[index] = data[index]
+
+    return data
+
+
+def findHorizonTime(data, duration, receiverLocation: wgs84.latlon) -> list:
+    satellite = EarthSatellite(data["tle1"], data["tle2"], data["tle0"], load.timescale())
     ts = load.timescale()
-    start = ts.now
+    start = load.timescale().now()
     t_utc = start.utc
 
     end = ts.utc(t_utc.year, t_utc.month, t_utc.day, t_utc.hour, t_utc.minute, t_utc.second + duration)
     condition = {"bare": 0, "marginal": 25.0, "good": 50.0, "excellent": 75.0}
     degree = condition["bare"]  # peak is at 90
-    t_utc, events = self.satellite.find_events(receiverLocation, start, end, altitude_degrees=degree)
+    t_utc, events = satellite.find_events(receiverLocation, start, end, altitude_degrees=degree)
 
-    # print(start.utc_strftime('%Y %b %d %H:%M:%S'), "-", end.utc_strftime('%Y %b %d %H:%M:%S'))
-    #
-    # for ti, event in zip(t, events):
-    #     name = (f'rise above {degree}°', 'culminate', f'set below {degree}°')[event]
-    #     print(ti.utc_strftime('%Y %b %d %H:%M:%S'), name)
+    # FOR DEBUG
+    print(start.utc_strftime('%Y %b %d %H:%M:%S'), "-", end.utc_strftime('%Y %b %d %H:%M:%S'))
+    for ti, event in zip(t_utc, events):
+        name = (f'rise above {degree}°', 'culminate', f'set below {degree}°')[event]
+        print(ti.utc_strftime('%Y %b %d %H:%M:%S'), name)
+    # END DEBUG
 
     intervals = []
     for index in range(0, len(events), 3):
         try:
             t_utc[index + 2]
         except IndexError:
+            # our quick fix here is just to break out of for loop
+            # when len(t_utc) != 3
+            # but instead we should look back/forward in time and find
+            # either the missing datetime_rise or datetime_peak
             break
         else:
             datetime_rise = Time.utc_datetime(t_utc[index])
