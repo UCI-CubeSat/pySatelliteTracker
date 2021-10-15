@@ -41,6 +41,7 @@ def loadTLE() -> {dict}:
         timeStamp = lines[0].strip()
         dateTimeObj = datetime.strptime(timeStamp, '%Y-%m-%d %H:%M:%S.%f')
         currTime = datetime.now()
+        f.close()
 
         if (currTime - dateTimeObj).days >= 1:
             print("WARNING: file outdated")
