@@ -15,8 +15,7 @@ def getTLE() -> {dict}:
     return satnogs.getTLE()
 
 
-# def saveTLE() -> {dict}:
-def saveTLE():
+def saveTLE() -> {dict}:
     data = getTLE()
     currTime = datetime.now()
     client.set("currTime", currTime)
@@ -25,7 +24,7 @@ def saveTLE():
         line = data[key]  # line = TLE info
         client.set(nospace_key, line)
 
-    keySet = data.keys()
+    keySet = list(data.keys())
     client.set("keySet", keySet)
 
     return data
@@ -42,14 +41,11 @@ def loadTLE() -> {dict}:
         saveTLE()
 
     data = dict()
-    keySet = list(eval(client.get("keySet").decode("utf-8")))
-    print(keySet)
+    keySet = client.get("keySet").decode("utf-8")
+    keySet = ast.literal_eval(keySet)
 
     for k in keySet:
         nosk = k.replace(" ", "_")
         v = client.get(nosk).decode("utf-8")  # byte -> str
         data[k] = ast.literal_eval(v)  # str -> dict
     return data
-
-# saveTLE()
-# loadTLE()
