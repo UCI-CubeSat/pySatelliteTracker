@@ -22,13 +22,19 @@ def saveTLE():
     client.set("currTime", currTime)
     for key in data.keys():
         nospace_key = key.replace(" ", "_")
-        line = data[key] # line = TLE info
+        line = data[key]  # line = TLE info
         client.set(nospace_key, line)
+
+    keySet = data.keys()
+    client.set("keySet", keySet)
+
+    return data
 
 
 def loadTLE() -> {dict}:
-
     timeStamp = client.get("currTime")
+    if timeStamp == None:
+        data = saveTLE()
     dateTimeObj = datetime.strptime(timeStamp.decode("utf-8"), '%Y-%m-%d %H:%M:%S.%f')
     newCurrTime = datetime.now()
     if (newCurrTime - dateTimeObj).days >= 1:
@@ -36,9 +42,14 @@ def loadTLE() -> {dict}:
         saveTLE()
 
     data = dict()
-    sat_data = getTLE()
-    for k in sat_data.keys():
+    keySet = list(eval(client.get("keySet").decode("utf-8")))
+    print(keySet)
+
+    for k in keySet:
         nosk = k.replace(" ", "_")
-        v = client.get(nosk).decode("utf-8") # byte -> str
-        data[k] = ast.literal_eval(v) # str -> dict
+        v = client.get(nosk).decode("utf-8")  # byte -> str
+        data[k] = ast.literal_eval(v)  # str -> dict
     return data
+
+# saveTLE()
+# loadTLE()
