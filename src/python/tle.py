@@ -1,7 +1,5 @@
-import os
 from datetime import datetime
-import filepath
-from src.python import satnogs
+from src.python import satnogs, filepath
 from pymemcache.client import base
 import ast
 
