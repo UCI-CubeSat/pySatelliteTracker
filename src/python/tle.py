@@ -1,10 +1,12 @@
-import os
 from datetime import datetime
-import filepath
-from src.python import satnogs
+from src.python import satnogs, filepath
+from pymemcache.client import base
+import ast
 
 FOLDER_PATH = filepath.getRoot() + "/CubeSAT"
 FILE_DIR = FOLDER_PATH + "/tle.txt"
+
+client = base.Client(('localhost', 11211))
 
 
 def getTLE() -> {dict}:
@@ -14,52 +16,38 @@ def getTLE() -> {dict}:
 def saveTLE() -> {dict}:
     data = getTLE()
     currTime = datetime.now()
-    try:
-        f = open(FILE_DIR, 'w')
-    except FileNotFoundError:
-        os.mkdir(FOLDER_PATH)
-        f = open(FILE_DIR, 'w')
-    f.write(str(currTime) + "\n")
+    client.set("currTime", currTime)
+    client.set("keySet", data.keys())
     for key in data.keys():
-        line = data[key]
-        for value in line.values():
-            f.write(str(value) + "\n")
-    f.close()
+        cacheKey = key.replace(" ", "_")
+        line = data[key]  # line = TLE info
+        client.set(cacheKey, line)
 
     return data
 
 
 def loadTLE() -> {dict}:
-    try:
-        f = open(FILE_DIR, 'r')
-    except FileNotFoundError:
-        print("WARNING: file not found")
+    timeStamp = client.get("currTime")
+
+    if timeStamp is None:
+        print("WARNING: cache miss")
         data = saveTLE()
         return data
-    else:
-        lines = f.readlines()
-        timeStamp = lines[0].strip()
-        dateTimeObj = datetime.strptime(timeStamp, '%Y-%m-%d %H:%M:%S.%f')
-        currTime = datetime.now()
-        f.close()
 
-        if (currTime - dateTimeObj).days >= 1:
-            print("WARNING: file outdated")
-            data = saveTLE()
-            return data
-        else:
-            print("LOGGING: read existing tle file")
-            keySet = ['tle0', 'tle1', 'tle2', 'tle_source', 'sat_id', 'norad_cat_id', 'updated']
-            data = dict()
-            for line in range(1, len(lines), len(keySet)):
-                tle = dict()
-                name = lines[line].strip()
-                for index in range(0, len(keySet)):
-                    content = lines[line + index].strip()
-                    if index == 4:
-                        tle[keySet[index]] = "https://db.satnogs.org/satellite/" + content
-                    else:
-                        tle[keySet[index]] = content
-                data[name] = tle
-            return data
-    return dict()
+    dateTimeObj = datetime.strptime(timeStamp.decode("utf-8"), '%Y-%m-%d %H:%M:%S.%f')
+    newCurrTime = datetime.now()
+    if (newCurrTime - dateTimeObj).days >= 1:
+        print("WARNING: cache outdated")
+        data = saveTLE()
+        return data
+
+    print("LOGGING: cache hit")
+    data = dict()
+    keySetString = client.get("keySet").decode("utf-8")
+    keySet = ast.literal_eval(keySetString[10:-1])
+
+    for k in keySet:
+        key = k.replace(" ", "_")
+        v = client.get(key).decode("utf-8")  # byte -> str
+        data[k] = ast.literal_eval(v)  # str -> dict
+    return data
