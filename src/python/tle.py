@@ -1,3 +1,5 @@
+import subprocess
+from sys import platform as _platform
 from datetime import datetime
 from src.python import satnogs, filepath
 from pymemcache.client import base
@@ -14,6 +16,9 @@ def getTLE() -> {dict}:
 
 
 def saveTLE() -> {dict}:
+    if _platform == "win32":
+        return getTLE()
+
     data = getTLE()
     currTime = datetime.now()
     client.set("currTime", currTime)
@@ -27,7 +32,15 @@ def saveTLE() -> {dict}:
 
 
 def loadTLE() -> {dict}:
-    timeStamp = client.get("currTime")
+    if _platform == "win32":
+        print("WARNING: cache miss")
+        return getTLE()
+
+    try:
+        timeStamp = client.get("currTime")
+    except ConnectionRefusedError:
+        timeStamp = None
+        subprocess.run(["brew", "services", "start", "memcached"])
 
     if timeStamp is None:
         print("WARNING: cache miss")
