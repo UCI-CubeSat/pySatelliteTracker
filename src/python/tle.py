@@ -19,33 +19,37 @@ def saveTLE() -> {dict}:
     data = getTLE()
     currTime = datetime.now()
     client.set("currTime", currTime)
+    client.set("keySet", data.keys())
     for key in data.keys():
-        nospace_key = key.replace(" ", "_")
+        cacheKey = key.replace(" ", "_")
         line = data[key]  # line = TLE info
-        client.set(nospace_key, line)
-
-    keySet = list(data.keys())
-    client.set("keySet", keySet)
+        client.set(cacheKey, line)
 
     return data
 
 
 def loadTLE() -> {dict}:
     timeStamp = client.get("currTime")
-    if timeStamp == None:
+
+    if timeStamp is None:
+        print("WARNING: cache miss")
         data = saveTLE()
+        return data
+
     dateTimeObj = datetime.strptime(timeStamp.decode("utf-8"), '%Y-%m-%d %H:%M:%S.%f')
     newCurrTime = datetime.now()
     if (newCurrTime - dateTimeObj).days >= 1:
-        print("WARNING: file outdated")
-        saveTLE()
+        print("WARNING: cache outdated")
+        data = saveTLE()
+        return data
 
+    print("LOGGING: cache hit")
     data = dict()
-    keySet = client.get("keySet").decode("utf-8")
-    keySet = ast.literal_eval(keySet)
+    keySetString = client.get("keySet").decode("utf-8")
+    keySet = ast.literal_eval(keySetString[10:-1])
 
     for k in keySet:
-        nosk = k.replace(" ", "_")
-        v = client.get(nosk).decode("utf-8")  # byte -> str
+        key = k.replace(" ", "_")
+        v = client.get(key).decode("utf-8")  # byte -> str
         data[k] = ast.literal_eval(v)  # str -> dict
     return data
