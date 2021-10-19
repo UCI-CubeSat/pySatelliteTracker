@@ -40,6 +40,8 @@ def loadTLE() -> {dict}:
         timeStamp = client.get("currTime")
     except ConnectionRefusedError:
         timeStamp = None
+        subprocess.run(["brew", "services", "stop", "memcached"])
+        subprocess.run(["brew", "install", "memcached"])
         subprocess.run(["brew", "services", "start", "memcached"])
 
     if timeStamp is None:
