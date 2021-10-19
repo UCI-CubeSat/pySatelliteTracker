@@ -4,6 +4,7 @@ import numpy
 from skyfield.toposlib import wgs84
 from skyfield.api import EarthSatellite, load
 from skyfield.timelib import Time
+import src.python.tle as tle
 
 
 def selectSat(tle: dict, name: str) -> dict:
@@ -90,6 +91,7 @@ def findHorizonTime(data, duration, receiverLocation: wgs84.latlon) -> list:
     satellite = EarthSatellite(data["tle1"], data["tle2"], data["tle0"], load.timescale())
     ts = load.timescale()
     start = load.timescale().now()
+    if_temp = start.utc
     t_utc = start.utc
 
     end = ts.utc(t_utc.year, t_utc.month, t_utc.day, t_utc.hour, t_utc.minute, t_utc.second + duration)
@@ -97,16 +99,29 @@ def findHorizonTime(data, duration, receiverLocation: wgs84.latlon) -> list:
     degree = condition["bare"]  # peak is at 90
     t_utc, events = satellite.find_events(receiverLocation, start, end, altitude_degrees=degree)
 
+
+    # events = [2,0,1,2,0,1]
+    print("before loop events: ", events)
+    if list(events[:3]) != [0,1,2]:
+        print("inside check first if")
+        start = ts.utc(if_temp.year, if_temp.month, if_temp.day, if_temp.hour, if_temp.minute, if_temp.second - 15*60)
+        t_utc, events = satellite.find_events(receiverLocation, start, end, altitude_degrees=degree)
+    if list(events[-3:]) != [0,1,2]:
+        print("inside check second if")
+        end = ts.utc(if_temp.year, if_temp.month, if_temp.day, if_temp.hour, if_temp.minute, if_temp.second + duration + 7*48*3600)
+        t_utc, events = satellite.find_events(receiverLocation, start, end, altitude_degrees=degree)
+        print("after loop events: ", events)
+
     # FOR DEBUG
     # SEE HOW IT NORMALLY ALWAYS HAVE [riseabove, culminate, setbelow]
-    # print(start.utc_strftime('%Y %b %d %H:%M:%S'), "-", end.utc_strftime('%Y %b %d %H:%M:%S'))
-    # for ti, event in zip(t_utc, events):
-    #     name = (f'rise above {degree}°', 'culminate', f'set below {degree}°')[event]
-    #     print(f'{ti.utc_strftime("%Y %b %d %H:%M:%S")} {name}', end="")
-    #     if "set below" in name:
-    #         print("")
-    #     else:
-    #         print(", ", end="")
+    print(start.utc_strftime('%Y %b %d %H:%M:%S'), "-", end.utc_strftime('%Y %b %d %H:%M:%S'))
+    for ti, event in zip(t_utc, events):
+        name = (f'rise above {degree}°', 'culminate', f'set below {degree}°')[event]
+        print(f'{ti.utc_strftime("%Y %b %d %H:%M:%S")} {name}', end="")
+        if "set below" in name:
+            print("")
+        else:
+            print(", ", end="")
     # END DEBUG
 
     intervals = []
@@ -121,19 +136,19 @@ def findHorizonTime(data, duration, receiverLocation: wgs84.latlon) -> list:
             # but instead we should look back/forward in time and find
             # either the missing datetime_rise or datetime_peak
 
-            print(f'ERROR: for Satellite - {data["tle0"]}, for Duration - {duration/3600.0} hrs')
-            print("During: ", start.utc_strftime('%Y %b %d %H:%M:%S'), "-", end.utc_strftime('%Y %b %d %H:%M:%S'))
-            for ti, event in zip(t_utc, events):
-                name = (f'rise above {degree}°', 'culminate', f'set below {degree}°')[event]
-                print(f'{ti.utc_strftime("%Y %b %d %H:%M:%S")} {name}', end="")
-                if "rise above" in name:
-                    print(", ", end="")
-                elif "set below" in name:
-                    print("")
-                else:
-                    print(", ", end="")
-
-            print("\nMissing either a rise above or set below")
+            # print(f'ERROR: for Satellite - {data["tle0"]}, for Duration - {duration/3600.0} hrs')
+            # print("During: ", start.utc_strftime('%Y %b %d %H:%M:%S'), "-", end.utc_strftime('%Y %b %d %H:%M:%S'))
+            # for ti, event in zip(t_utc, events):
+            #     name = (f'rise above {degree}°', 'culminate', f'set below {degree}°')[event]
+            #     print(f'{ti.utc_strftime("%Y %b %d %H:%M:%S")} {name}', end="")
+            #     if "rise above" in name:
+            #         print(", ", end="")
+            #     elif "set below" in name:
+            #         print("")
+            #     else:
+            #         print(", ", end="")
+            #
+            # print("\nMissing either a rise above or set below")
             raise IndexError
         else:
             datetime_rise = Time.utc_datetime(t_utc[index])
@@ -151,3 +166,7 @@ def findHorizonTime(data, duration, receiverLocation: wgs84.latlon) -> list:
                  datetime_peak))
 
     return intervals
+
+
+# if __name__ == "__main__":
+    # findHorizonTime(tle.loadTLE()["ISS (ZARYA)"], 5*24*3600, wgs84.latlon(33.643831, -117.841132, elevation_m=17))

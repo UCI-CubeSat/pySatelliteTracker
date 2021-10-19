@@ -80,5 +80,5 @@ def plotWindow() -> FuncAnimation:
 
 if __name__ == "__main__":
     a = plotWindow()
-    b = plotPath()
+    # b = plotPath()
     pyplot.show()
