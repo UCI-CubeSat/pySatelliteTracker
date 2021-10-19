@@ -99,14 +99,14 @@ def findHorizonTime(data, duration, receiverLocation: wgs84.latlon) -> list:
 
     # FOR DEBUG
     # SEE HOW IT NORMALLY ALWAYS HAVE [riseabove, culminate, setbelow]
-    print(start.utc_strftime('%Y %b %d %H:%M:%S'), "-", end.utc_strftime('%Y %b %d %H:%M:%S'))
-    for ti, event in zip(t_utc, events):
-        name = (f'rise above {degree}°', 'culminate', f'set below {degree}°')[event]
-        print(f'{ti.utc_strftime("%Y %b %d %H:%M:%S")} {name}', end="")
-        if "set below" in name:
-            print("")
-        else:
-            print(", ", end="")
+    # print(start.utc_strftime('%Y %b %d %H:%M:%S'), "-", end.utc_strftime('%Y %b %d %H:%M:%S'))
+    # for ti, event in zip(t_utc, events):
+    #     name = (f'rise above {degree}°', 'culminate', f'set below {degree}°')[event]
+    #     print(f'{ti.utc_strftime("%Y %b %d %H:%M:%S")} {name}', end="")
+    #     if "set below" in name:
+    #         print("")
+    #     else:
+    #         print(", ", end="")
     # END DEBUG
 
     intervals = []
@@ -114,11 +114,27 @@ def findHorizonTime(data, duration, receiverLocation: wgs84.latlon) -> list:
         try:
             t_utc[index + 2]
         except IndexError:
+            # break
+
             # our quick fix here is just to break out of for loop
             # when len(t_utc) != 3
             # but instead we should look back/forward in time and find
             # either the missing datetime_rise or datetime_peak
-            break
+
+            print(f'ERROR: for Satellite - {data["tle0"]}, for Duration - {duration/3600.0} hrs')
+            print("During: ", start.utc_strftime('%Y %b %d %H:%M:%S'), "-", end.utc_strftime('%Y %b %d %H:%M:%S'))
+            for ti, event in zip(t_utc, events):
+                name = (f'rise above {degree}°', 'culminate', f'set below {degree}°')[event]
+                print(f'{ti.utc_strftime("%Y %b %d %H:%M:%S")} {name}', end="")
+                if "rise above" in name:
+                    print(", ", end="")
+                elif "set below" in name:
+                    print("")
+                else:
+                    print(", ", end="")
+
+            print("\nMissing either a rise above or set below")
+            raise IndexError
         else:
             datetime_rise = Time.utc_datetime(t_utc[index])
             datetime_peak = Time.utc_datetime(t_utc[index + 1])
