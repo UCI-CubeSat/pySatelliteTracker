@@ -91,26 +91,91 @@ def findHorizonTime(data, duration, receiverLocation: wgs84.latlon) -> list:
     satellite = EarthSatellite(data["tle1"], data["tle2"], data["tle0"], load.timescale())
     ts = load.timescale()
     start = load.timescale().now()
+    # start = ts.tt(2021,10,19,16,0)
+
     if_temp = start.utc
     t_utc = start.utc
+
+    # event = [0,1,2,0,1,2]
 
     end = ts.utc(t_utc.year, t_utc.month, t_utc.day, t_utc.hour, t_utc.minute, t_utc.second + duration)
     condition = {"bare": 0, "marginal": 25.0, "good": 50.0, "excellent": 75.0}
     degree = condition["bare"]  # peak is at 90
     t_utc, events = satellite.find_events(receiverLocation, start, end, altitude_degrees=degree)
 
+    t_utc = list(t_utc)
+    print("original events: ", events)
 
-    # events = [2,0,1,2,0,1]
-    print("before loop events: ", events)
-    if list(events[:3]) != [0,1,2]:
-        print("inside check first if")
+    if list(events[:1]) != [0]:
+        print("inside first if, line 110")
         start = ts.utc(if_temp.year, if_temp.month, if_temp.day, if_temp.hour, if_temp.minute, if_temp.second - 15*60)
         t_utc, events = satellite.find_events(receiverLocation, start, end, altitude_degrees=degree)
-    if list(events[-3:]) != [0,1,2]:
-        print("inside check second if")
-        end = ts.utc(if_temp.year, if_temp.month, if_temp.day, if_temp.hour, if_temp.minute, if_temp.second + duration + 7*48*3600)
+        print("find_event start: ",events)
+
+    if list(events[-1:]) != [2]:
+        print("inside second if, line 115")
+        end = ts.utc(if_temp.year, if_temp.month, if_temp.day, if_temp.hour, if_temp.minute, if_temp.second + duration + 15*60)
         t_utc, events = satellite.find_events(receiverLocation, start, end, altitude_degrees=degree)
-        print("after loop events: ", events)
+        print("find_event end: ", events)
+    t_utc = list(t_utc)
+
+    if len(events) == 0:
+        pass
+    elif len(events) == 1:
+        events = []
+    elif len(events) == 2: #[0,1], [1,2], [2,0]
+        if events == [0,1]:
+            events = numpy.append(events,2)
+            t_utc.append(t_utc[-1])
+        if events == [1,2]:
+            events = numpy.insert(events,0,0)
+            t_utc = numpy.insert(t_utc, 0, t_utc[0])
+        if events == [2,0]:
+            events = []
+            t_utc = []
+        print("manually1: ", events)
+    else:
+        if list(events[:1]) != [0]:
+            ## startswith 1 [1,2,0,1,2,0] ==> [1,1,2,0,1,2,0]
+            if list(events)[0] == 1:
+                events = numpy.insert(events, 0, 0)
+                t_utc.insert(0, t_utc[0])
+                print("manually2: ", events)
+            ## startswith 2 ==> delete
+            if list(events)[0] == 2:
+                events = numpy.delete(events, 0)
+                t_utc.pop(0)
+                print("manually3: ", events)
+
+        if list(events[-1:]) != [2]:  # [1,1,2,0,1,2,0,1]
+            ## endswith 1 ==> 0,1 ==> []
+            if list(events)[-1] == 1:
+                events = numpy.append(events, 2)
+                t_utc.append(t_utc[-1])
+                print("manually4: ", events)
+            ## endswith 0 ==> delete
+            if list(events)[-1] == 0:
+                events = numpy.delete(events, -1)
+                t_utc.pop(-1)
+                print("manually5: ", events)
+
+    # what if events contains multiple 1s?
+    removed_index = []
+    for i in range(1,len(events)-1):
+        previous = events[i-1]
+        if events[i] == previous:
+            removed_index.append(i)
+    # print("removed index: ", removed_index)
+    new_events = []
+    new_t_utc = []
+    for i in range(len(list(events))):
+        if i not in removed_index:
+            new_events.append(events[i])
+            new_t_utc.append(t_utc[i])
+    events = new_events
+    t_utc = new_t_utc
+
+    print("final events: ", events)
 
     # FOR DEBUG
     # SEE HOW IT NORMALLY ALWAYS HAVE [riseabove, culminate, setbelow]
@@ -124,7 +189,7 @@ def findHorizonTime(data, duration, receiverLocation: wgs84.latlon) -> list:
             print(", ", end="")
     # END DEBUG
 
-    intervals = []
+    intervals = [] # [0 1 1 2 0 1 2 0 1 2 0 1 2 0 1 1 2]
     for index in range(0, len(events), 3):
         try:
             t_utc[index + 2]
@@ -160,13 +225,13 @@ def findHorizonTime(data, duration, receiverLocation: wgs84.latlon) -> list:
             diff = numpy.float64((datetime_set - datetime_rise).total_seconds())
             t0_sec = t0.utc.second
             t1_sec = t0_sec + diff
-            intervals.append(
-                (ts.utc(t0.utc.year, t0.utc.month, t0.utc.day, t0.utc.hour, t0.utc.minute,
-                        numpy.arange(t0_sec, t1_sec, 60)),
-                 datetime_peak))
+            intervals.append(ts.utc(t0.utc.year, t0.utc.month, t0.utc.day, t0.utc.hour, t0.utc.minute,numpy.arange(t0_sec, t1_sec, 60)))
 
     return intervals
 
 
-# if __name__ == "__main__":
-    # findHorizonTime(tle.loadTLE()["ISS (ZARYA)"], 5*24*3600, wgs84.latlon(33.643831, -117.841132, elevation_m=17))
+if __name__ == "__main__":
+    test_data = {'tle0': 'SWAMPSAT-2', 'tle1': '1 45115U 19071E   21291.86497388  .04186387  69041-1  44439-2 0  9996', 'tle2': '2 45115  51.6123 110.1195 0012719 290.3740  69.5910 16.16128133 96770', 'tle_source': 'Celestrak (active)', 'sat_id': 'YEMP-9986-5415-9633-0192', 'norad_cat_id': 45115, 'updated': '2021-10-19T07:00:55.055394+0000'}
+    findHorizonTime(tle.loadTLE()["ISS (ZARYA)"], 5*24*3600, wgs84.latlon(33.643831, -117.841132, elevation_m=17))
+    # findHorizonTime(test_data, 5*24*3600, wgs84.latlon(33.643831, -117.841132, elevation_m=17))
+

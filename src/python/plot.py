@@ -72,8 +72,12 @@ def plotWindow() -> FuncAnimation:
     satellites = list()
     response = tle.loadTLE()
     for k in response.keys():
-        satellites.append(calculation.findHorizonTime(response[k], 7*24*3600,
-                                                      wgs84.latlon(33.643831, -117.841132, elevation_m=17)))
+        # try:
+        satellites.append(calculation.findHorizonTime(response[k], 5*24*3600, wgs84.latlon(33.643831, -117.841132, elevation_m=17)))
+        # except IndexError:
+        #     print("error k: ", response[k])
+        #     break
+
 
     return None
 
