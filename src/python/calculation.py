@@ -107,16 +107,12 @@ def findHorizonTime(data, duration, receiverLocation: wgs84.latlon) -> list:
     print("original events: ", events)
 
     if list(events[:1]) != [0]:
-        print("inside first if, line 110")
         start = ts.utc(if_temp.year, if_temp.month, if_temp.day, if_temp.hour, if_temp.minute, if_temp.second - 15*60)
         t_utc, events = satellite.find_events(receiverLocation, start, end, altitude_degrees=degree)
-        print("find_event start: ",events)
 
     if list(events[-1:]) != [2]:
-        print("inside second if, line 115")
         end = ts.utc(if_temp.year, if_temp.month, if_temp.day, if_temp.hour, if_temp.minute, if_temp.second + duration + 15*60)
         t_utc, events = satellite.find_events(receiverLocation, start, end, altitude_degrees=degree)
-        print("find_event end: ", events)
     t_utc = list(t_utc)
 
     if len(events) == 0:
@@ -133,31 +129,26 @@ def findHorizonTime(data, duration, receiverLocation: wgs84.latlon) -> list:
         if events == [2,0]:
             events = []
             t_utc = []
-        print("manually1: ", events)
     else:
         if list(events[:1]) != [0]:
             ## startswith 1 [1,2,0,1,2,0] ==> [1,1,2,0,1,2,0]
             if list(events)[0] == 1:
                 events = numpy.insert(events, 0, 0)
                 t_utc.insert(0, t_utc[0])
-                print("manually2: ", events)
             ## startswith 2 ==> delete
             if list(events)[0] == 2:
                 events = numpy.delete(events, 0)
                 t_utc.pop(0)
-                print("manually3: ", events)
 
         if list(events[-1:]) != [2]:  # [1,1,2,0,1,2,0,1]
             ## endswith 1 ==> 0,1 ==> []
             if list(events)[-1] == 1:
                 events = numpy.append(events, 2)
                 t_utc.append(t_utc[-1])
-                print("manually4: ", events)
             ## endswith 0 ==> delete
             if list(events)[-1] == 0:
                 events = numpy.delete(events, -1)
                 t_utc.pop(-1)
-                print("manually5: ", events)
 
     # what if events contains multiple 1s?
     removed_index = []
@@ -175,7 +166,6 @@ def findHorizonTime(data, duration, receiverLocation: wgs84.latlon) -> list:
     events = new_events
     t_utc = new_t_utc
 
-    print("final events: ", events)
 
     # FOR DEBUG
     # SEE HOW IT NORMALLY ALWAYS HAVE [riseabove, culminate, setbelow]
